@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventoy USB - Index</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 20px; background: #1a1a1a; color: #eee; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: #4a9eff; }
+        h2 { color: #7dd3a0; border-bottom: 1px solid #333; padding-bottom: 5px; margin-top: 30px; }
+        h3 { color: #aaa; margin-left: 20px; }
+        .file { padding: 8px 10px; display: flex; align-items: center; margin: 2px 0; border-radius: 4px; }
+        .file:hover { background: #2a2a2a; }
+        .icon { width: 24px; height: 24px; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .file-name { flex-grow: 1; }
+        .size { color: #888; font-size: 0.85em; margin-left: 10px; }
+        .badge { font-size: 0.7em; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+        .badge-yes { background: #22c55e; color: #000; }
+        .badge-no { background: #333; color: #666; }
+        .badge-img { background: #f59e0b; color: #000; }
+        .loading { color: #666; font-style: italic; }
+        .error { color: #ef4444; }
+        a { color: #4a9eff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .stats { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        .persist-info { background: #1e3a5f; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Ventoy USB</h1>
+    <p class="stats">Overview of all available files</p>
+    
+    <div class="persist-info">
+        <strong>💡 Tip:</strong> Start a local server to view this page:<br>
+        <code>sudo bash scripts/start_index.sh</code><br>
+        Then open <a href="http://localhost:8080/scripts/index.html">http://localhost:8080/scripts/index.html</a>
+    </div>
+
+    <h2>Windows</h2>
+    <div id="windows" class="loading">Loading...</div>
+
+    <h2>Linux - apt (Debian/Ubuntu)</h2>
+    <div id="apt"></div>
+
+    <h2>Linux - dnf (Fedora)</h2>
+    <div id="dnf" class="loading">Loading...</div>
+
+    <h2>Linux - zypper (openSUSE)</h2>
+    <div id="zypper" class="loading">Loading...</div>
+
+    <h2>Linux - pacman (Arch-based)</h2>
+    <div id="pacman" class="loading">Loading...</div>
+
+    <h2>Linux - Tools</h2>
+    <div id="tools" class="loading">Loading...</div>
+
+    <h2>Linux - Other</h2>
+    <div id="other" class="loading">Loading...</div>
+
+    <div id="persistence" class="loading">Loading...</div>
+
+    <hr style="border-color:#333;margin:40px 0;">
+    <p style="color:#666;font-size:0.85em;">
+        <strong>Package Managers:</strong><br>
+        apt → Ubuntu, Mint, PopOS, Debian, Kali, Parrot, Tails<br>
+        dnf → Fedora, Rocky, Alma<br>
+        zypper → openSUSE<br>
+        pacman → Manjaro, EndeavourOS, Arch, NixOS
+    </p>
+
+    <script>
+        let basePath = window.location.pathname.replace(/\/index\.html$/, '');
+        if (!basePath || basePath === '/') basePath = '';
+        
+        // If index.html is in a subfolder, go up one level to find OS/
+        const osBasePath = basePath ? basePath + '/..' : '..';
+        
+        const icons = {
+            'ubuntu': '🟠', 'kubuntu': '🔵', 'lubuntu': '🟤', 'xubuntu': '🟡',
+            'budgie': '🟢', 'cinnamon': '🟢', 'mate': '🟠', 'unity': '🟣',
+            'studio': '🎨', 'edubuntu': '🧒', 'lomiri': '🟠',
+            'mint': '🟢', 'popos': '🟣', 'pop': '🟣', 
+            'debian': '🔴', 'kali': '⬛', 'parrot': '🦜', 'whonix': '🔒',
+            'zorin': '💙', 'elementary': '🌟',
+            'fedora': '🔴', 'rocky': '🟤', 'alma': '🟤',
+            'opensuse': '🦎', 'suse': '🦎',
+            'manjaro': '🟢', 'endeavouros': '🟢', 'arch': '🔵', 'nixos': '❄️',
+            'tails': '🐰', 'windows': '🪟', 
+            'gparted': '🔧', 'systemrescue': '🛠️', 'clonezilla': '💾', 'dban': '🗑️',
+            'rescuezilla': '🦸', 'hirens': '💿', 'memtest': '🧪',
+            'puppy': '🐕', 'tinycore': '💎', 'antix': '🐜', 'knoppix': '🐇',
+            'ubuntu': '🟠', 'kubuntu': '🔵', 'lubuntu': '🟤', 'xubuntu': '🟡',
+            'budgie': '🟢', 'cinnamon': '🟢', 'mate': '🟠', 'unity': '🟣',
+            'studio': '🎨', 'edubuntu': '🧒', 'lomiri': '🟠'
+        };
+        
+        const persistenceMap = {
+            'ubuntu': 'ubuntu-casper-rw.img',
+            'kubuntu': 'ubuntu-casper-rw.img',
+            'lubuntu': 'ubuntu-casper-rw.img',
+            'xubuntu': 'ubuntu-casper-rw.img',
+            'budgie': 'ubuntu-casper-rw.img',
+            'cinnamon': 'ubuntu-casper-rw.img',
+            'mate': 'ubuntu-casper-rw.img',
+            'unity': 'ubuntu-casper-rw.img',
+            'studio': 'ubuntu-casper-rw.img',
+            'edubuntu': 'ubuntu-casper-rw.img',
+            'lomiri': 'ubuntu-casper-rw.img',
+            'linuxmint': 'ubuntu-casper-rw.img',
+            'mint': 'ubuntu-casper-rw.img',
+            'popos': 'ubuntu-casper-rw.img',
+            'pop': 'ubuntu-casper-rw.img',
+            'debian': 'ubuntu-casper-rw.img',
+            'fedora': 'fedora-casper-rw.img',
+            'rocky': 'fedora-casper-rw.img',
+            'manjaro': 'manjaro-casper-rw.img',
+            'endeavouros': 'manjaro-casper-rw.img'
+        };
+
+        function getIcon(filename) {
+            const name = filename.toLowerCase();
+            for (const [key, icon] of Object.entries(icons)) {
+                if (name.includes(key)) return icon;
+            }
+            return '💿';
+        }
+        
+        function formatSize(bytes) {
+            const gb = bytes / (1024*1024*1024);
+            if (gb >= 1) return gb.toFixed(1) + ' GB';
+            const mb = bytes / (1024*1024);
+            return mb.toFixed(0) + ' MB';
+        }
+        
+        function hasPersistence(filename) {
+            const name = filename.toLowerCase();
+            for (const key in persistenceMap) {
+                if (name.includes(key)) return persistenceMap[key];
+            }
+            return null;
+        }
+        
+        let availablePersistenceFiles = [];
+        
+        async function loadPersistenceFiles() {
+            const files = await fetchDir(getPath('persistence/'));
+            if (files) {
+                availablePersistenceFiles = files.filter(f => !f.endsWith('/'));
+            }
+        }
+        
+        function checkPersistence(filename) {
+            const persistFile = hasPersistence(filename);
+            if (!persistFile) return { exists: false, file: null };
+            
+            const persistBase = persistFile.replace('.img', '').split('-')[0].toLowerCase();
+            const exists = availablePersistenceFiles.some(f => 
+                f.toLowerCase().startsWith(persistBase)
+            );
+            return { exists, file: persistFile };
+        }
+        
+        function createFileElement(filename, size, isImg = false) {
+            const persistCheck = checkPersistence(filename);
+            let badge = '';
+            
+            if (isImg) {
+                badge = '<span class="badge badge-img">IMG</span>';
+            } else if (persistCheck.exists) {
+                badge = '<span class="badge badge-yes">PERSIST</span>';
+            } else if (persistCheck.file) {
+                badge = '<span class="badge badge-no" title="Persistence bestand ontbreekt: ' + persistCheck.file + '">no persist</span>';
+            } else {
+                badge = '<span class="badge badge-no">no persist</span>';
+            }
+            
+            const icon = getIcon(filename);
+            return `<div class="file"><span class="icon">${icon}</span><span class="file-name">${filename}</span>${size ? '<span class="size">' + size + '</span>' : ''}${badge}</div>`;
+        }
+        
+        async function fetchDir(path) {
+            try {
+                const response = await fetch(path);
+                if (!response.ok) throw new Error('Failed to fetch');
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'))
+                    .map(a => a.textContent)
+                    .filter(n => n && n !== '../');
+                return links;
+            } catch (e) {
+                console.error('Error fetching', path, e);
+                return null;
+            }
+        }
+        
+        function joinPath(base, sub) {
+            const b = base.endsWith('/') ? base.slice(0, -1) : base;
+            const s = sub.startsWith('/') ? sub.slice(1) : sub;
+            return b + '/' + s;
+        }
+        
+        async function loadSection(containerId, basePath, subdirs = null) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<span class="loading">Loading...</span>';
+            
+            try {
+                if (subdirs) {
+                    let html = '';
+                    for (const subdir of subdirs) {
+                        const files = await fetchDir(joinPath(basePath, subdir) + '/');
+                        if (files && files.length > 0) {
+                            html += `<h3>${subdir}</h3>`;
+                            files.forEach(f => {
+                                if (!f.endsWith('/')) {
+                                    html += createFileElement(f, '');
+                                }
+                            });
+                        }
+                    }
+                    container.innerHTML = html || '<span class="error">No files found</span>';
+                } else {
+                    const files = await fetchDir(basePath);
+                    if (files && files.length > 0) {
+                        let html = '';
+                        files.forEach(f => {
+                            if (!f.endsWith('/')) {
+                                html += createFileElement(f, '');
+                            }
+                        });
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<span class="error">Empty or failed to load</span>';
+                    }
+                }
+            } catch (e) {
+                container.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
+            }
+        }
+        
+        async function loadPersistence() {
+            const container = document.getElementById('persistence');
+            const files = await fetchDir(getPath('persistence/'));
+            
+            if (files && files.length > 0) {
+                let html = '';
+                files.forEach(f => {
+                    if (!f.endsWith('/')) {
+                        html += `<div class="file"><span class="icon">💾</span><span class="file-name">${f}</span></div>`;
+                    }
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<span class="error">No persistence images created yet.<br>Run: sudo bash scripts/create_persistence.sh</span>';
+            }
+        }
+        
+        function getPath(relativePath) {
+            const prefix = osBasePath || '/';
+            return prefix + (prefix.endsWith('/') ? '' : '/') + relativePath;
+        }
+        
+        async function init() {
+            await loadPersistenceFiles();
+            
+            await Promise.all([
+                loadSection('windows', getPath('OS/Windows/')),
+                loadSection('apt', getPath('OS/Linux/apt/'), ['Ubuntu', 'LinuxMint', 'PopOS', 'Tails', 'Debian', 'Kali', 'Parrot', 'Whonix', 'Elementary', 'Zorin']),
+                loadSection('dnf', getPath('OS/Linux/dnf/'), ['Fedora', 'Rocky', 'Alma']),
+                loadSection('zypper', getPath('OS/Linux/zypper/'), ['openSUSE']),
+                loadSection('pacman', getPath('OS/Linux/pacman/'), ['Manjaro', 'EndeavourOS', 'Arch', 'NixOS']),
+                loadSection('tools', getPath('OS/Linux/Tools/')),
+                loadSection('other', getPath('OS/Linux/Other/'), ['Puppy', 'TinyCore', 'antiX', 'Knoppix']),
+                loadPersistence()
+            ]);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
