@@ -99,7 +99,7 @@ get_total_size() {
     local total=0
     for idx in "$@"; do
         local item="${ITEMS[$((idx-1))]}"
-        IFS='|' read -r cat name url path <<< "$item"
+        IFS='|' read -r category name url path <<< "$item"
         local size=$(get_remote_file_size "$url")
         [ "$size" -gt 0 ] 2>/dev/null && total=$((total + size))
     done
@@ -109,7 +109,7 @@ get_total_size() {
 check_existing() {
     local idx=$1
     local item="${ITEMS[$((idx-1))]}"
-    IFS='|' read -r cat name url path <<< "$item"
+    IFS='|' read -r category name url path <<< "$item"
     local filename
     filename=$(basename "$url")
     [ -f "$TARGET_DIR/$path/$filename" ] && echo "true" || echo "false"
@@ -121,7 +121,7 @@ show_selection_menu() {
     local idx=1
     
     for item in "${ITEMS[@]}"; do
-        IFS='|' read -r cat name url path <<< "$item"
+        IFS='|' read -r category name url path <<< "$item"
         
         if [ "$cat" != "$current_cat" ]; then
             current_cat="$cat"
@@ -170,7 +170,7 @@ download_selected() {
     local item_list=""
     for idx in "${selected[@]}"; do
         local item="${ITEMS[$((idx-1))]}"
-        IFS='|' read -r cat name url path <<< "$item"
+        IFS='|' read -r category name url path <<< "$item"
         item_list="$item_list$name\n"
     done
     
@@ -199,7 +199,7 @@ download_selected() {
     
     for global_idx in "${selected[@]}"; do
         local item="${ITEMS[$((global_idx-1))]}"
-        IFS='|' read -r cat name url path <<< "$item"
+        IFS='|' read -r category name url path <<< "$item"
         
         local filename
         filename=$(basename "$url")
