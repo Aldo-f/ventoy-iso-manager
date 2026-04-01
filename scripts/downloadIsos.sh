@@ -1,21 +1,12 @@
 #!/bin/bash
-# Interactive ISO Downloader - Flat list with space toggle
+# Interactive ISO Downloader - whiptail interface
 # Run: sudo bash scripts/downloadIsos.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$SCRIPT_DIR/../OS"
 
-# Color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
-
 # Format: CATEGORY|NAME|URL|PATH
 declare -a ITEMS
-declare -a SELECTED_INDICES
 
 add_item() {
     ITEMS+=("$1|$2|$3|$4")
@@ -84,27 +75,6 @@ add_item "Lightweight" "antiX 23.2" "https://sourceforge.net/projects/antix-linu
 # Functions
 # ============================================================
 
-is_selected() {
-    local idx=$1
-    for sel in "${SELECTED_INDICES[@]}"; do
-        [ "$sel" -eq "$idx" ] && return 0
-    done
-    return 1
-}
-
-toggle_selection() {
-    local idx=$1
-    if is_selected "$idx"; then
-        local new_array=()
-        for s in "${SELECTED_INDICES[@]}"; do
-            [ "$s" -ne "$idx" ] && new_array+=("$s")
-        done
-        SELECTED_INDICES=("${new_array[@]}")
-    else
-        SELECTED_INDICES+=("$idx")
-    fi
-}
-
 get_remote_file_size() {
     local url="$1"
     local size_bytes
@@ -127,7 +97,7 @@ bytes_to_human() {
 
 get_total_size() {
     local total=0
-    for idx in "${SELECTED_INDICES[@]}"; do
+    for idx in "$@"; do
         local item="${ITEMS[$((idx-1))]}"
         IFS='|' read -r cat name url path <<< "$item"
         local size=$(get_remote_file_size "$url")
@@ -136,60 +106,59 @@ get_total_size() {
     echo $total
 }
 
-print_list() {
-    clear
-    echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║         VENTOY ISO DOWNLOADER - Press SPACE to toggle    ║${NC}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "Press SPACE on number to toggle selection, D to download, C to clear, Q to quit"
-    echo ""
-    
+check_existing() {
+    local idx=$1
+    local item="${ITEMS[$((idx-1))]}"
+    IFS='|' read -r cat name url path <<< "$item"
+    local filename
+    filename=$(basename "$url")
+    [ -f "$TARGET_DIR/$path/$filename" ] && echo "true" || echo "false"
+}
+
+show_selection_menu() {
+    local menu_items=()
     local current_cat=""
     local idx=1
+    
     for item in "${ITEMS[@]}"; do
         IFS='|' read -r cat name url path <<< "$item"
         
-        # Print category header if changed
         if [ "$cat" != "$current_cat" ]; then
-            echo -e "${YELLOW}━━━ ${cat} ━━━${NC}"
             current_cat="$cat"
+            menu_items+=("" "━━━ $cat ━━━")
         fi
         
-        local filename
-        filename=$(basename "$url")
-        local exists=""
-        [ -f "$TARGET_DIR/$path/$filename" ] && exists="${GREEN}✓${NC} "
+        local exists=$(check_existing "$idx")
+        local status="[ ]"
+        [ "$exists" = "true" ] && status="[✓]"
         
-        if is_selected "$idx"; then
-            printf "  ${GREEN}[%2d]●${NC} %-35s ${exists}${YELLOW}→${NC} %s\n" "$idx" "$name" "$path"
-        else
-            printf "  ${GREEN}[%2d] ${NC} %-35s ${exists}${YELLOW}→${NC} %s\n" "$idx" "$name" "$path"
-        fi
-        
+        menu_items+=("$idx" "$status $name ($path)")
         ((idx++))
     done
     
-    echo ""
-    local total_size
-    total_size=$(get_total_size)
-    local total_human
-    total_human=$(bytes_to_human "$total_size")
-    echo -e "  ${CYAN}[D]${NC} Download (${GREEN}${#SELECTED_INDICES[@]}${NC} selected, ${YELLOW}${total_human}${NC})"
-    echo -e "  ${CYAN}[C]${NC} Clear selection"
-    echo -e "  ${CYAN}[Q]${NC} Quit"
-    echo ""
+    # Use whiptail checklist
+    local selected
+    selected=$(whiptail --title "Ventoy ISO Downloader" \
+        --backtitle "Use SPACE to toggle, TAB to navigate buttons" \
+        --checklist "Select ISO's to download ( SPACE = toggle, ENTER = confirm )" \
+        30 80 20 \
+        "${menu_items[@]}" \
+        3>&1 1>&2 2>&3)
+    
+    echo "$selected"
 }
 
 download_selected() {
-    if [ ${#SELECTED_INDICES[@]} -eq 0 ]; then
-        echo -e "${RED}No items selected!${NC}"
+    local selected=("$@")
+    
+    if [ ${#selected[@]} -eq 0 ] || [ -z "${selected[0]}" ]; then
+        whiptail --title "Error" --msgbox "No items selected!" 8 40
         return
     fi
     
-    echo -e "${CYAN}Calculating total size...${NC}"
+    # Calculate total size
     local total_size
-    total_size=$(get_total_size)
+    total_size=$(get_total_size "${selected[@]}")
     local total_human
     total_human=$(bytes_to_human "$total_size")
     
@@ -198,35 +167,37 @@ download_selected() {
     local available_human
     available_human=$(bytes_to_human "$available_bytes")
     
-    clear
-    echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║              DOWNLOAD SUMMARY                              ║${NC}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "Selected: ${GREEN}${#SELECTED_INDICES[@]} items${NC}"
-    echo -e "Total size: ${YELLOW}${total_human}${NC}"
-    echo -e "Available: ${YELLOW}${available_human}${NC}"
-    echo ""
+    local item_list=""
+    for idx in "${selected[@]}"; do
+        local item="${ITEMS[$((idx-1))]}"
+        IFS='|' read -r cat name url path <<< "$item"
+        item_list="$item_list$name\n"
+    done
     
+    # Show summary
+    if ! whiptail --title "Download Summary" \
+        --yesno "Selected: ${#selected[@]} items\nTotal size: $total_human\nAvailable: $available_human\n\n$item_list\n\nStart download?" \
+        25 60; then
+        return
+    fi
+    
+    # Check space
     if [ "$total_size" -gt 0 ] && [ "$available_bytes" -lt "$total_size" ]; then
         local needed=$((total_size - available_bytes))
         local needed_human
         needed_human=$(bytes_to_human "$needed")
-        echo -e "${RED}✗ Not enough space! Need ${needed_human} more.${NC}"
-        echo ""
-        echo -e "Remove some items? (y/N)${NC}"
-        read -r confirm
-        [[ ! "$confirm" =~ ^[Yy] ]] && return
+        whiptail --title "Error" --msgbox "Not enough space! Need ${needed_human} more." 10 40
+        return
     fi
     
-    echo -e "Start download? (y/N)${NC}"
-    read -r confirm
-    [[ ! "$confirm" =~ ^[Yy] ]] && return
-    
-    echo ""
+    # Download loop
+    local total=${#selected[@]}
     local idx=1
-    local total=${#SELECTED_INDICES[@]}
-    for global_idx in "${SELECTED_INDICES[@]}"; do
+    local log_file="/tmp/ventoy_download_$$.log"
+    
+    > "$log_file"
+    
+    for global_idx in "${selected[@]}"; do
         local item="${ITEMS[$((global_idx-1))]}"
         IFS='|' read -r cat name url path <<< "$item"
         
@@ -236,33 +207,26 @@ download_selected() {
         mkdir -p "$TARGET_DIR/$path"
         
         if [ -f "$TARGET_DIR/$path/$filename" ]; then
-            echo -e "${GREEN}✓${NC} Already exists: $name"
+            echo "✓ Already exists: $name" >> "$log_file"
             continue
         fi
         
-        echo -e "${CYAN}[$idx/$total]${NC} Downloading: ${name}"
+        echo "[$idx/$total] Downloading: $name" >> "$log_file"
         
-        local size_bytes
-        size_bytes=$(get_remote_file_size "$url")
-        [ "$size_bytes" -gt 0 ] && echo -e "  Size: $(bytes_to_human "$size_bytes")"
+        wget -O "$TARGET_DIR/$path/$filename" --continue "$url" >> "$log_file" 2>&1
         
-        wget -O "$TARGET_DIR/$path/$filename" --continue --progress=bar:force "$url" 2>&1 | tail -5
-        
-        if [ ${PIPESTATUS[0]} -eq 0 ] && [ -f "$TARGET_DIR/$path/$filename" ]; then
-            echo -e "  ${GREEN}✓ Success${NC}"
+        if [ -f "$TARGET_DIR/$path/$filename" ]; then
+            echo "✓ Success: $name" >> "$log_file"
         else
-            echo -e "  ${RED}✗ Failed${NC}"
+            echo "✗ Failed: $name" >> "$log_file"
             rm -f "$TARGET_DIR/$path/$filename"
         fi
         
         ((idx++))
-        echo ""
     done
     
-    echo -e "${GREEN}Download complete!${NC}"
-    SELECTED_INDICES=()
-    echo "Press Enter to continue..."
-    read
+    whiptail --title "Download Complete" --textbox "$log_file" 25 80
+    rm -f "$log_file"
 }
 
 # Check for required tools
@@ -274,35 +238,26 @@ if ! command -v curl &> /dev/null; then
     echo "Error: curl required"
     exit 1
 fi
+if ! command -v whiptail &> /dev/null; then
+    echo "Error: whiptail required. Install: sudo apt install whiptail"
+    exit 1
+fi
 
 # Main loop
-main_loop() {
-    while true; do
-        print_list
-        echo -n "Choice: "
-        read -r choice
-        
-        case "$choice" in
-            q|Q)
-                exit 0
-                ;;
-            d|D)
-                download_selected
-                ;;
-            c|C)
-                SELECTED_INDICES=()
-                ;;
-            *)
-                # Check if it's a number to toggle
-                if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#ITEMS[@]} ]; then
-                    toggle_selection "$choice"
-                fi
-                ;;
-        esac
+while true; do
+    selected=$(show_selection_menu)
+    
+    if [ $? -ne 0 ]; then
+        exit 0
+    fi
+    
+    # Parse selected items (whiptail returns space-separated indices)
+    declare -a selected_indices
+    for item in $selected; do
+        selected_indices+=("$item")
     done
-}
-
-# Only run main loop if script is executed directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main_loop
-fi
+    
+    if [ ${#selected_indices[@]} -gt 0 ]; then
+        download_selected "${selected_indices[@]}"
+    fi
+done
