@@ -335,8 +335,10 @@ download_item() {
         return 1
     fi
     
+    echo -e "  ${CYAN}Starting download...${NC}"
+    
     # Proceed with download
-    wget -O "$TARGET_DIR/$path/$filename" --continue --progress=bar:force "$url" 2>&1 | tail -3
+    wget -O "$TARGET_DIR/$path/$filename" --continue --progress=bar:force "$url" 2>&1 | tail -5
     
     if [ ${PIPESTATUS[0]} -eq 0 ] && [ -f "$TARGET_DIR/$path/$filename" ]; then
         echo -e "  ${GREEN}✓ Success${NC}"
