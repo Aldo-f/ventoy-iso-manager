@@ -214,7 +214,13 @@ print_category_items() {
     for item in "${ITEMS[@]}"; do
         IFS='|' read -r cat name url path <<< "$item"
         if [ "$cat" = "$category" ]; then
-            printf "  ${GREEN}[%2d]${NC} %-40s ${YELLOW}→ ${path}/${NC}\n" "$idx" "$name"
+            local filename
+            filename=$(basename "$url")
+            if [ -f "$TARGET_DIR/$path/$filename" ]; then
+                printf "  ${GREEN}[%2d]${NC} ${GREEN}✓${NC} %-38s ${YELLOW}→ ${path}/${NC}\n" "$idx" "$name"
+            else
+                printf "  ${GREEN}[%2d]${NC} %-40s ${YELLOW}→ ${path}/${NC}\n" "$idx" "$name"
+            fi
         fi
         ((idx++))
     done
