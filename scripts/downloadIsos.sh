@@ -123,9 +123,9 @@ show_selection_menu() {
     for item in "${ITEMS[@]}"; do
         IFS='|' read -r category name url path <<< "$item"
         
-        if [ "$cat" != "$current_cat" ]; then
-            current_cat="$cat"
-            menu_items+=("" "━━━ $cat ━━━")
+        if [ "$category" != "$current_cat" ]; then
+            current_cat="$category"
+            menu_items+=("" "━━━ $category ━━━")
         fi
         
         local exists=$(check_existing "$idx")
