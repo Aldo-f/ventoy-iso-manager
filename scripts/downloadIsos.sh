@@ -371,7 +371,10 @@ category_menu() {
         read -r choice
         
         case "$choice" in
-            b|B|"")
+            b|B)
+                return
+                ;;
+            "")
                 return
                 ;;
             *)
