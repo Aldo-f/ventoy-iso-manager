@@ -84,12 +84,12 @@ add_item "Manjaro" "Manjaro KDE 26.0.2" \
 # ============================================================
 # SECURITY - Penetration Testing (apt)
 # ============================================================
-add_item "Penetration Testing" "Parrot Security 6.2" \
-    "https://download.parrot.sh/parrot/iso/6.2/Parrot-security-6.2_amd64.iso" \
+add_item "Penetration Testing" "Parrot Security 7.1" \
+    "https://bunny.deb.parrot.sh/parrot/iso/7.1/Parrot-security-7.1_amd64.iso" \
     "Linux/apt/Parrot"
 
-add_item "Penetration Testing" "Parrot Home 6.2" \
-    "https://download.parrot.sh/parrot/iso/6.2/Parrot-home-6.2_amd64.iso" \
+add_item "Penetration Testing" "Parrot Home 7.1" \
+    "https://bunny.deb.parrot.sh/parrot/iso/7.1/Parrot-home-7.1_amd64.iso" \
     "Linux/apt/Parrot"
 
 # ============================================================
@@ -211,6 +211,7 @@ print_category_items() {
     echo ""
     
     local idx=1
+    local global_idx=1
     for item in "${ITEMS[@]}"; do
         IFS='|' read -r cat name url path <<< "$item"
         if [ "$cat" = "$category" ]; then
@@ -221,8 +222,9 @@ print_category_items() {
             else
                 printf "  ${GREEN}[%2d]${NC} %-40s ${YELLOW}→ ${path}/${NC}\n" "$idx" "$name"
             fi
+            ((idx++))
         fi
-        ((idx++))
+        ((global_idx++))
     done
     echo ""
 }
@@ -353,13 +355,13 @@ download_item() {
 get_items_in_category() {
     local category="$1"
     local indices=()
-    local idx=1
+    local global_idx=1
     for item in "${ITEMS[@]}"; do
         IFS='|' read -r cat name url path <<< "$item"
         if [ "$cat" = "$category" ]; then
-            indices+=($idx)
+            indices+=($global_idx)
         fi
-        ((idx++))
+        ((global_idx++))
     done
     echo "${indices[@]}"
 }
