@@ -388,8 +388,11 @@ category_menu() {
                 done
                 
                 echo ""
-                echo "Press Enter to continue..."
-                read
+                echo -n "Press Enter to continue or B to go back: "
+                read -r continue
+                if [[ "$continue" =~ ^[Bb]$ ]]; then
+                    return
+                fi
                 ;;
         esac
     done
@@ -413,8 +416,11 @@ download_all() {
     done
     
     echo ""
-    echo "Press Enter to continue..."
-    read
+    echo -n "Press Enter to continue or Q to quit: "
+    read -r continue
+    if [[ "$continue" =~ ^[Qq]$ ]]; then
+        exit 0
+    fi
 }
 
 # Check for required tools
