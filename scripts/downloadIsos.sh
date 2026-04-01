@@ -305,6 +305,17 @@ download_item() {
     
     mkdir -p "$TARGET_DIR/$path"
     
+    # Extract filename from URL
+    local filename
+    filename=$(basename "$url")
+    
+    # Check if file already exists
+    if [ -f "$TARGET_DIR/$path/$filename" ]; then
+        echo -e "${GREEN}✓${NC} Already exists: ${name}"
+        echo -e "  ${YELLOW}→ ${path}/${filename}${NC}"
+        return 0
+    fi
+    
     echo -e "${GREEN}↓${NC} Downloading: ${name}"
     echo -e "  Target: $TARGET_DIR/$path"
     
@@ -319,13 +330,14 @@ download_item() {
     fi
     
     # Proceed with download
-    wget -P "$TARGET_DIR/$path/" --continue --progress=bar:force "$url" 2>&1 | tail -3
+    wget -O "$TARGET_DIR/$path/$filename" --continue --progress=bar:force "$url" 2>&1 | tail -3
     
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    if [ ${PIPESTATUS[0]} -eq 0 ] && [ -f "$TARGET_DIR/$path/$filename" ]; then
         echo -e "  ${GREEN}✓ Success${NC}"
         return 0
     else
         echo -e "  ${RED}✗ Failed${NC}"
+        rm -f "$TARGET_DIR/$path/$filename"
         return 1
     fi
 }
