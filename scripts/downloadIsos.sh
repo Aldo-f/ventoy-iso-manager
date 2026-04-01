@@ -537,7 +537,7 @@ main_loop() {
                 exit 0
                 ;;
             d|D)
-                print_selection_manager
+                download_selected
                 ;;
             c|C)
                 SELECTED_INDICES=()
