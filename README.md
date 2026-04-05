@@ -4,7 +4,7 @@ A collection of scripts and configuration files to set up and manage a Ventoy US
 
 ## Features
 
-- **Organized ISO structure**: ISOs categorized by Linux package manager (apt, dnf, pacman, zypper) and Windows
+- **Flat ISO structure**: All ISOs directly in numbered folders for easy Ventoy navigation
 - **Persistence support**: Pre-configured persistence images for Ubuntu, Fedora, and Manjaro families
 - **Interactive ISO downloader**: Download verified ISOs directly to the correct folders
 - **Local web interface**: View all ISOs and persistence status via a local web server
@@ -22,11 +22,15 @@ ventoy-setup/
 │   ├── index.html               # Web interface
 │   └── README.md                # Scripts documentation
 ├── ventoy/
-│   └── ventoy.json               # Ventoy configuration with persistence
+│   └── ventoy.json              # Ventoy configuration with persistence + tree-view
 ├── docs/
-│   ├── TAILS_PERSISTENCE.md      # Tails persistence guide
-│   └── SYSTEM_TOOLS.md           # System tools documentation
-└── .gitignore                    # Git ignore rules
+│   ├── TAILS_PERSISTENCE.md     # Tails persistence guide
+│   └── SYSTEM_TOOLS.md          # System tools documentation
+├── 01-Linux/                    # All Linux ISOs
+├── 02-Windows/                  # Windows ISOs
+├── 03-Tools/                    # Recovery tool ISOs (GParted, Clonezilla, Rescuezilla)
+├── 04-ToSort/                   # Empty, for new unsorted ISOs
+└── persistence/                 # Persistence images
 ```
 
 ## Quick Start
@@ -35,10 +39,9 @@ ventoy-setup/
    - Download and install Ventoy on your USB drive
    - Copy the contents of this repo to the USB root
 
-2. **Create folder structure**:
+2. **Download ISOs**:
    ```bash
-   mkdir -p OS/Linux/{apt/{Ubuntu,Debian,LinuxMint,PopOS,Kali,Parrot,Tails},dnf/{Fedora,Rocky,Alma},pacman/{Manjaro,EndeavourOS,Arch},zypper/openSUSE,Tools,Other} OS/Windows
-   mkdir -p persistence
+   sudo bash scripts/downloadIsos.sh
    ```
 
 3. **Create persistence images** (optional):
@@ -46,12 +49,7 @@ ventoy-setup/
    sudo bash scripts/createPersistence.sh
    ```
 
-4. **Download ISOs**:
-   ```bash
-   sudo bash scripts/downloadIsos.sh
-   ```
-
-5. **View web interface**:
+4. **View web interface**:
    ```bash
    bash scripts/startIndex.sh
    # Open http://localhost:8080 in your browser
@@ -70,12 +68,13 @@ Edit `scripts/downloadIsos.sh` to add new ISOs. Each entry follows:
 ```bash
 add_item "Category" "Name" \
     "https://download-url.iso" \
-    "OS/path/to/folder"
+    "01-Linux"
 ```
+Use `01-Linux` for Linux distros, `02-Windows` for Windows, `03-Tools` for tools, or `04-ToSort` for unsorted ISOs.
 
 ## Space Checking
 
-The download script now includes automatic space checking:
+The download script includes automatic space checking:
 - Retrieves exact ISO size via HTTP HEAD request
 - Compares with available space on USB drive
 - Warns and asks for confirmation if space is insufficient
@@ -90,11 +89,3 @@ The download script now includes automatic space checking:
 ## License
 
 MIT License - Feel free to modify and distribute.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request

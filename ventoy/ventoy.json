@@ -1,58 +1,29 @@
 {
     "control": [
         { "VTOY_WIN11_BYPASS_CHECK": "1" },
-        { "VTOY_WINDOWS_PERSISTENCE": "16G" }
+        { "VTOY_WINDOWS_PERSISTENCE": "16G" },
+        { "VTOY_DEFAULT_MENU_MODE": "tree" }
     ],
     "persistence": [
         {
-            "alias": "Ubuntu 25.04",
-            "iso": "OS/Linux/apt/Ubuntu/ubuntu-25.04-desktop-amd64.iso",
-            "file": "persistence/ubuntu-casper-rw.img"
+            "alias": "Ubuntu 24.04",
+            "iso": "/01-Linux/ubuntu-24.04.4-desktop-amd64.iso",
+            "file": "/persistence/ubuntu-casper-rw.img"
         },
         {
             "alias": "Kubuntu 25.10",
-            "iso": "OS/Linux/apt/Ubuntu/kubuntu-25.10-desktop-amd64.iso",
-            "file": "persistence/ubuntu-casper-rw.img"
+            "iso": "/01-Linux/kubuntu-25.10-desktop-amd64.iso",
+            "file": "/persistence/ubuntu-casper-rw.img"
         },
         {
-            "alias": "LinuxMint",
-            "iso": "OS/Linux/apt/LinuxMint/linuxmint-22.3-cinnamon-64bit.iso",
-            "file": "persistence/ubuntu-casper-rw.img"
-        },
-        {
-            "alias": "Debian 13 KDE",
-            "iso": "OS/Linux/apt/Debian/debian-live-13.4.0-amd64-kde.iso",
-            "file": "persistence/ubuntu-casper-rw.img"
+            "alias": "Linux Mint 22.3",
+            "iso": "/01-Linux/linuxmint-22.3-cinnamon-64bit.iso",
+            "file": "/persistence/ubuntu-casper-rw.img"
         },
         {
             "alias": "Kali Linux",
-            "iso": "OS/Linux/apt/Kali/kali-linux-2026.1-installer-amd64.iso",
-            "file": "persistence/ubuntu-casper-rw.img"
-        },
-        {
-            "alias": "Fedora KDE",
-            "iso": "OS/Linux/dnf/Fedora/Fedora-KDE-Desktop-Live-43-1.6.x86_64.iso",
-            "file": "persistence/fedora-casper-rw.img"
-        },
-        {
-            "alias": "Rocky 9",
-            "iso": "OS/Linux/dnf/Rocky/Rocky-9.7-x86_64-dvd.iso",
-            "file": "persistence/fedora-casper-rw.img"
-        },
-        {
-            "alias": "Manjaro KDE",
-            "iso": "OS/Linux/pacman/Manjaro/manjaro-kde-26.0.2-260206-linux618.iso",
-            "file": "persistence/manjaro-casper-rw.img"
-        },
-        {
-            "alias": "EndeavourOS",
-            "iso": "OS/Linux/pacman/EndeavourOS/EndeavourOS_Titan-2026.03.06.iso",
-            "file": "persistence/manjaro-casper-rw.img"
-        },
-        {
-            "alias": "Pop!_OS",
-            "iso": "OS/Linux/apt/PopOS/pop-os_24.04_amd64_generic_23.iso",
-            "file": "persistence/ubuntu-casper-rw.img"
+            "iso": "/01-Linux/kali-linux-2026.1-installer-amd64.iso",
+            "file": "/persistence/ubuntu-casper-rw.img"
         }
     ]
 }

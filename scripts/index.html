@@ -8,7 +8,6 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 20px; background: #1a1a1a; color: #eee; max-width: 1200px; margin: 0 auto; padding: 20px; }
         h1 { color: #4a9eff; }
         h2 { color: #7dd3a0; border-bottom: 1px solid #333; padding-bottom: 5px; margin-top: 30px; }
-        h3 { color: #aaa; margin-left: 20px; }
         .file { padding: 8px 10px; display: flex; align-items: center; margin: 2px 0; border-radius: 4px; }
         .file:hover { background: #2a2a2a; }
         .icon { width: 24px; height: 24px; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
@@ -32,47 +31,25 @@
     
     <div class="persist-info">
         <strong>💡 Tip:</strong> Start a local server to view this page:<br>
-        <code>sudo bash scripts/start_index.sh</code><br>
+        <code>sudo bash scripts/startIndex.sh</code><br>
         Then open <a href="http://localhost:8080/scripts/index.html">http://localhost:8080/scripts/index.html</a>
     </div>
 
     <h2>Windows</h2>
     <div id="windows" class="loading">Loading...</div>
 
-    <h2>Linux - apt (Debian/Ubuntu)</h2>
-    <div id="apt"></div>
+    <h2>Linux</h2>
+    <div id="linux" class="loading">Loading...</div>
 
-    <h2>Linux - dnf (Fedora)</h2>
-    <div id="dnf" class="loading">Loading...</div>
-
-    <h2>Linux - zypper (openSUSE)</h2>
-    <div id="zypper" class="loading">Loading...</div>
-
-    <h2>Linux - pacman (Arch-based)</h2>
-    <div id="pacman" class="loading">Loading...</div>
-
-    <h2>Linux - Tools</h2>
+    <h2>Tools</h2>
     <div id="tools" class="loading">Loading...</div>
 
-    <h2>Linux - Other</h2>
-    <div id="other" class="loading">Loading...</div>
-
     <div id="persistence" class="loading">Loading...</div>
-
-    <hr style="border-color:#333;margin:40px 0;">
-    <p style="color:#666;font-size:0.85em;">
-        <strong>Package Managers:</strong><br>
-        apt → Ubuntu, Mint, PopOS, Debian, Kali, Parrot, Tails<br>
-        dnf → Fedora, Rocky, Alma<br>
-        zypper → openSUSE<br>
-        pacman → Manjaro, EndeavourOS, Arch, NixOS
-    </p>
 
     <script>
         let basePath = window.location.pathname.replace(/\/index\.html$/, '');
         if (!basePath || basePath === '/') basePath = '';
         
-        // If index.html is in a subfolder, go up one level to find OS/
         const osBasePath = basePath ? basePath + '/..' : '..';
         
         const icons = {
@@ -89,9 +66,7 @@
             'gparted': '🔧', 'systemrescue': '🛠️', 'clonezilla': '💾', 'dban': '🗑️',
             'rescuezilla': '🦸', 'hirens': '💿', 'memtest': '🧪',
             'puppy': '🐕', 'tinycore': '💎', 'antix': '🐜', 'knoppix': '🐇',
-            'ubuntu': '🟠', 'kubuntu': '🔵', 'lubuntu': '🟤', 'xubuntu': '🟡',
-            'budgie': '🟢', 'cinnamon': '🟢', 'mate': '🟠', 'unity': '🟣',
-            'studio': '🎨', 'edubuntu': '🧒', 'lomiri': '🟠'
+            'win11': '🪟'
         };
         
         const persistenceMap = {
@@ -111,6 +86,7 @@
             'popos': 'ubuntu-casper-rw.img',
             'pop': 'ubuntu-casper-rw.img',
             'debian': 'ubuntu-casper-rw.img',
+            'kali': 'ubuntu-casper-rw.img',
             'fedora': 'fedora-casper-rw.img',
             'rocky': 'fedora-casper-rw.img',
             'manjaro': 'manjaro-casper-rw.img',
@@ -201,38 +177,22 @@
             return b + '/' + s;
         }
         
-        async function loadSection(containerId, basePath, subdirs = null) {
+        async function loadSection(containerId, basePath) {
             const container = document.getElementById(containerId);
             container.innerHTML = '<span class="loading">Loading...</span>';
             
             try {
-                if (subdirs) {
+                const files = await fetchDir(basePath);
+                if (files && files.length > 0) {
                     let html = '';
-                    for (const subdir of subdirs) {
-                        const files = await fetchDir(joinPath(basePath, subdir) + '/');
-                        if (files && files.length > 0) {
-                            html += `<h3>${subdir}</h3>`;
-                            files.forEach(f => {
-                                if (!f.endsWith('/')) {
-                                    html += createFileElement(f, '');
-                                }
-                            });
+                    files.forEach(f => {
+                        if (!f.endsWith('/')) {
+                            html += createFileElement(f, '');
                         }
-                    }
-                    container.innerHTML = html || '<span class="error">No files found</span>';
+                    });
+                    container.innerHTML = html;
                 } else {
-                    const files = await fetchDir(basePath);
-                    if (files && files.length > 0) {
-                        let html = '';
-                        files.forEach(f => {
-                            if (!f.endsWith('/')) {
-                                html += createFileElement(f, '');
-                            }
-                        });
-                        container.innerHTML = html;
-                    } else {
-                        container.innerHTML = '<span class="error">Empty or failed to load</span>';
-                    }
+                    container.innerHTML = '<span class="error">Empty or failed to load</span>';
                 }
             } catch (e) {
                 container.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
@@ -244,7 +204,7 @@
             const files = await fetchDir(getPath('persistence/'));
             
             if (files && files.length > 0) {
-                let html = '';
+                let html = '<h2>Persistence Images</h2>';
                 files.forEach(f => {
                     if (!f.endsWith('/')) {
                         html += `<div class="file"><span class="icon">💾</span><span class="file-name">${f}</span></div>`;
@@ -252,7 +212,7 @@
                 });
                 container.innerHTML = html;
             } else {
-                container.innerHTML = '<span class="error">No persistence images created yet.<br>Run: sudo bash scripts/create_persistence.sh</span>';
+                container.innerHTML = '<span class="error">No persistence images created yet.<br>Run: sudo bash scripts/createPersistence.sh</span>';
             }
         }
         
@@ -265,13 +225,9 @@
             await loadPersistenceFiles();
             
             await Promise.all([
-                loadSection('windows', getPath('OS/Windows/')),
-                loadSection('apt', getPath('OS/Linux/apt/'), ['Ubuntu', 'LinuxMint', 'PopOS', 'Tails', 'Debian', 'Kali', 'Parrot', 'Whonix', 'Elementary', 'Zorin']),
-                loadSection('dnf', getPath('OS/Linux/dnf/'), ['Fedora', 'Rocky', 'Alma']),
-                loadSection('zypper', getPath('OS/Linux/zypper/'), ['openSUSE']),
-                loadSection('pacman', getPath('OS/Linux/pacman/'), ['Manjaro', 'EndeavourOS', 'Arch', 'NixOS']),
-                loadSection('tools', getPath('OS/Linux/Tools/')),
-                loadSection('other', getPath('OS/Linux/Other/'), ['Puppy', 'TinyCore', 'antiX', 'Knoppix']),
+                loadSection('windows', getPath('02-Windows/')),
+                loadSection('linux', getPath('01-Linux/')),
+                loadSection('tools', getPath('03-Tools/')),
                 loadPersistence()
             ]);
         }
